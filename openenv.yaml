@@ -1,0 +1,32 @@
+spec_version: 1
+
+name: "crisis-response-coordinator"
+type: "space"
+
+runtime: "fastapi"
+app: "server.app:app"
+port: 8000
+
+# Fixed: removed the underscore
+entrypoint: "server.my_env_environment:MyEnvironment"
+
+tasks:
+  - id: "task_easy"
+    name: "Easy Task"
+    grader: "tasks.task_easy:create_easy_task"
+  - id: "task_medium"
+    name: "Medium Task"
+    grader: "tasks.task_medium:create_medium_task"
+  - id: "task_hard"
+    name: "Hard Task"
+    grader: "tasks.task_hard:create_hard_task"
+
+observation_space: "MyObservation"
+action_space: "MyAction"
+
+reward_range: [0.0, 1.0]
+
+tags:
+  - "real-world"
+  - "crisis-management"
+  - "decision-making"
