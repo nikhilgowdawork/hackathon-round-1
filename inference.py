@@ -21,6 +21,17 @@ if not API_KEY:
 
 client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
 
+# ---------------- SCORE FIX ----------------
+def adjust_score(score: float) -> float:
+    """
+    Force score into (0,1) range strictly
+    """
+    if score <= 0.0:
+        return 0.05
+    if score >= 1.0:
+        return 0.95
+    return score
+
 # ---------------- LOGGING ----------------
 def log_start(task: str):
     print(f"[START] task={task} env=crisis_response_env model={MODEL_NAME}", flush=True)
@@ -75,9 +86,9 @@ def run_task(name, task):
 
     output, error = get_llm_output(observation)
 
-    score = task.grade(output)
+    raw_score = task.grade(output)
+    score = adjust_score(raw_score)   # 🔥 FIX HERE
 
-    # format action string for logging
     action_str = str(output).replace("\n", "")
 
     log_step(
@@ -111,3 +122,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    
