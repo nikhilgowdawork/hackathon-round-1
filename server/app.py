@@ -7,7 +7,7 @@ from openenv.core.env_server.http_server import create_app
 import uvicorn
 
 # Import your models and environment
-from ..models import MyAction, MyObservation
+from models import MyAction, MyObservation
 from .my_env_environment import MyEnvironment
 
 # Create FastAPI app
@@ -25,7 +25,7 @@ def main():
     Entry point for running server locally or via Docker
 
     """
-     uvicorn.run("my_env.server.app:app",
+     uvicorn.run("server.app:app",
                   host="0.0.0.0",
                     port=7860
                     )
