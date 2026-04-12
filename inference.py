@@ -21,23 +21,20 @@ if not API_KEY:
 
 client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
 
-# ---------------- SAFE CLAMP ----------------
+# ---------------- SAFE FORMAT (ONLY FOR PRINT) ----------------
 def safe_format(value: float) -> str:
-    
     value = float(value)
 
     if value >= 1.0:
-        value = 0.99
+        value = 0.999
     elif value <= 0.0:
-        value = 0.01
-    
-    return f"{value:.2f}"
+        value = 0.001
 
+    return f"{value:.4f}"
 
 # ---------------- LOGGING ----------------
 def log_start(task: str):
     print(f"[START] task={task} env=crisis_response_env model={MODEL_NAME}", flush=True)
-
 
 def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]):
     error_val = error if error else "null"
@@ -48,7 +45,6 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
         flush=True
     )
 
-
 def log_end(success: bool, steps: int, rewards: List[float]):
     rewards_str = ",".join(safe_format(r) for r in rewards)
 
@@ -56,7 +52,6 @@ def log_end(success: bool, steps: int, rewards: List[float]):
         f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}",
         flush=True
     )
-
 
 # ---------------- LLM ----------------
 def get_llm_output(observation: Dict):
@@ -88,6 +83,10 @@ Situation:
 
         output = response.choices[0].message.content.strip()
 
+        
+        if task_type == "classify_urgency":
+            return output.strip().lower(), None
+
         try:
             return json.loads(output), None
         except:
@@ -95,7 +94,6 @@ Situation:
 
     except Exception as e:
         return None, str(e)
-
 
 # ---------------- RUN TASK ----------------
 def run_task(name, task):
@@ -112,7 +110,13 @@ def run_task(name, task):
             log_end(False, 1, [0.001])
             return 0.001
 
-        raw_score = task.grade(output)  # DO NOT clamp here
+        raw_score = task.grade(output)
+
+      
+        if raw_score >= 1.0:
+            raw_score = 0.999
+        elif raw_score <= 0.0:
+            raw_score = 0.001
 
         action_str = str(output).replace("\n", "")
 
@@ -139,7 +143,6 @@ def run_task(name, task):
         log_end(False, 1, [0.001])
         return 0.001
 
-
 # ---------------- MAIN ----------------
 async def main():
     tasks = [
@@ -156,7 +159,6 @@ async def main():
 
     final_score = max(0.001, min(0.999, total / len(tasks)))
     print(f"\nFINAL SCORE: {final_score:.2f}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
